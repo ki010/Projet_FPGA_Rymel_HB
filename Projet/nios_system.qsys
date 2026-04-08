@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <system name="$${FILENAME}">
  <component
    name="$${FILENAME}"
@@ -60,14 +60,6 @@
          type = "int";
       }
    }
-   element SDRAM
-   {
-      datum _sortIndex
-      {
-         value = "6";
-         type = "int";
-      }
-   }
    element SW
    {
       datum _sortIndex
@@ -89,14 +81,6 @@
       datum _sortIndex
       {
          value = "0";
-         type = "int";
-      }
-   }
-   element clocks
-   {
-      datum _sortIndex
-      {
-         value = "7";
          type = "int";
       }
    }
@@ -161,14 +145,6 @@
       datum baseAddress
       {
          value = "67121168";
-         type = "String";
-      }
-   }
-   element SDRAM.s1
-   {
-      datum baseAddress
-      {
-         value = "33554432";
          type = "String";
       }
    }
@@ -262,8 +238,6 @@
    type="conduit"
    dir="end" />
  <interface name="sw" internal="SW.external_connection" type="conduit" dir="end" />
- <interface name="sdram_wire" internal="SDRAM.wire" type="conduit" dir="end" />
- <interface name="sdram_clk" internal="clocks.sdram_clk" type="clock" dir="start" />
  <interface
    name="motorleft"
    internal="MOTOR_LEFT.external_connection"
@@ -359,9 +333,9 @@
   <parameter name="cpuID_stored" value="0" />
   <parameter name="breakOffset" value="32" />
   <parameter name="userDefinedSettings" value="" />
-  <parameter name="resetSlave" value="SDRAM.s1" />
+  <parameter name="resetSlave" value="MEMOIRE.s1" />
   <parameter name="mmu_TLBMissExcSlave" value="None" />
-  <parameter name="exceptionSlave" value="SDRAM.s1" />
+  <parameter name="exceptionSlave" value="MEMOIRE.s1" />
   <parameter name="breakSlave">CPU.jtag_debug_module</parameter>
   <parameter name="setting_perfCounterWidth" value="32" />
   <parameter name="setting_interruptControllerType" value="Internal" />
@@ -406,8 +380,8 @@
   <parameter name="tightlyCoupledInstructionMaster1AddrWidth" value="1" />
   <parameter name="tightlyCoupledInstructionMaster2AddrWidth" value="1" />
   <parameter name="tightlyCoupledInstructionMaster3AddrWidth" value="1" />
-  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='SDRAM.s1' start='0x2000000' end='0x4000000' /><slave name='MEMOIRE.s1' start='0x4001000' end='0x4002000' /><slave name='CPU.jtag_debug_module' start='0x4002800' end='0x4003000' /></address-map>]]></parameter>
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='SDRAM.s1' start='0x2000000' end='0x4000000' /><slave name='MEMOIRE.s1' start='0x4001000' end='0x4002000' /><slave name='CPU.jtag_debug_module' start='0x4002800' end='0x4003000' /><slave name='fin_rot_pio.s1' start='0x4003000' end='0x4003010' /><slave name='fin_sl_pio.s1' start='0x4003010' end='0x4003020' /><slave name='dir_rot_pio.s1' start='0x4003020' end='0x4003030' /><slave name='start_rot_pio.s1' start='0x4003030' end='0x4003040' /><slave name='start_sl_pio.s1' start='0x4003040' end='0x4003050' /><slave name='MOTOR_RIGHT.s1' start='0x4003050' end='0x4003060' /><slave name='MOTOR_LEFT.s1' start='0x4003060' end='0x4003070' /><slave name='LED.s1' start='0x4003070' end='0x4003080' /><slave name='SW.s1' start='0x4003080' end='0x4003090' /><slave name='JTAG.avalon_jtag_slave' start='0x4003090' end='0x4003098' /></address-map>]]></parameter>
+  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='MEMOIRE.s1' start='0x4001000' end='0x4002000' /><slave name='CPU.jtag_debug_module' start='0x4002800' end='0x4003000' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='MEMOIRE.s1' start='0x4001000' end='0x4002000' /><slave name='CPU.jtag_debug_module' start='0x4002800' end='0x4003000' /><slave name='fin_rot_pio.s1' start='0x4003000' end='0x4003010' /><slave name='fin_sl_pio.s1' start='0x4003010' end='0x4003020' /><slave name='dir_rot_pio.s1' start='0x4003020' end='0x4003030' /><slave name='start_rot_pio.s1' start='0x4003030' end='0x4003040' /><slave name='start_sl_pio.s1' start='0x4003040' end='0x4003050' /><slave name='MOTOR_RIGHT.s1' start='0x4003050' end='0x4003060' /><slave name='MOTOR_LEFT.s1' start='0x4003060' end='0x4003070' /><slave name='LED.s1' start='0x4003070' end='0x4003080' /><slave name='SW.s1' start='0x4003080' end='0x4003090' /><slave name='JTAG.avalon_jtag_slave' start='0x4003090' end='0x4003098' /></address-map>]]></parameter>
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="deviceFamilyName" value="Cyclone IV E" />
   <parameter name="internalIrqMaskSystemInfo" value="32" />
@@ -493,45 +467,6 @@
   <parameter name="writeBufferDepth" value="64" />
   <parameter name="writeIRQThreshold" value="8" />
   <parameter name="avalonSpec" value="2.0" />
- </module>
- <module
-   kind="altera_avalon_new_sdram_controller"
-   version="13.0.1.99.2"
-   enabled="1"
-   name="SDRAM">
-  <parameter name="TAC" value="5.5" />
-  <parameter name="TRCD" value="20.0" />
-  <parameter name="TRFC" value="70.0" />
-  <parameter name="TRP" value="20.0" />
-  <parameter name="TWR" value="14.0" />
-  <parameter name="casLatency" value="3" />
-  <parameter name="columnWidth" value="9" />
-  <parameter name="dataWidth" value="16" />
-  <parameter name="generateSimulationModel" value="false" />
-  <parameter name="initRefreshCommands" value="2" />
-  <parameter name="model">single_Micron_MT48LC4M32B2_7_chip</parameter>
-  <parameter name="numberOfBanks" value="4" />
-  <parameter name="numberOfChipSelects" value="1" />
-  <parameter name="pinsSharedViaTriState" value="false" />
-  <parameter name="powerUpDelay" value="100.0" />
-  <parameter name="refreshPeriod" value="15.625" />
-  <parameter name="rowWidth" value="13" />
-  <parameter name="masteredTristateBridgeSlave" value="0" />
-  <parameter name="TMRD" value="3" />
-  <parameter name="initNOPDelay" value="0.0" />
-  <parameter name="registerDataIn" value="true" />
-  <parameter name="clockRate" value="50000000" />
-  <parameter name="componentName" value="$${FILENAME}_SDRAM" />
- </module>
- <module kind="altera_up_clocks" version="13.0" enabled="1" name="clocks">
-  <parameter name="board" value="DE0-Nano" />
-  <parameter name="sys_clk_freq" value="50" />
-  <parameter name="sdram_clk" value="true" />
-  <parameter name="vga_clk" value="false" />
-  <parameter name="audio_clk" value="true" />
-  <parameter name="audio_clk_freq" value="12.288" />
-  <parameter name="AUTO_CLK_IN_PRIMARY_CLOCK_RATE" value="50000000" />
-  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV E" />
  </module>
  <module
    kind="altera_avalon_pio"
@@ -747,47 +682,11 @@
  <connection kind="interrupt" version="13.0" start="CPU.d_irq" end="JTAG.irq">
   <parameter name="irqNumber" value="5" />
  </connection>
- <connection kind="reset" version="13.0" start="clk_0.clk_reset" end="SDRAM.reset" />
- <connection kind="avalon" version="13.0" start="CPU.data_master" end="SDRAM.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x02000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="13.0"
-   start="CPU.instruction_master"
-   end="SDRAM.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x02000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="reset"
-   version="13.0"
-   start="CPU.jtag_debug_module_reset"
-   end="SDRAM.reset" />
- <connection
-   kind="reset"
-   version="13.0"
-   start="clk_0.clk_reset"
-   end="clocks.clk_in_primary_reset" />
- <connection
-   kind="reset"
-   version="13.0"
-   start="CPU.jtag_debug_module_reset"
-   end="clocks.clk_in_primary_reset" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="SDRAM.clk" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="JTAG.clk" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="LED.clk" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="SW.clk" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="MEMOIRE.clk1" />
- <connection kind="clock" version="13.0" start="clocks.sys_clk" end="CPU.clk" />
- <connection
-   kind="clock"
-   version="13.0"
-   start="clk_0.clk"
-   end="clocks.clk_in_primary" />
+ <connection kind="clock" version="13.0" start="clk_0.clk" end="JTAG.clk" />
+ <connection kind="clock" version="13.0" start="clk_0.clk" end="LED.clk" />
+ <connection kind="clock" version="13.0" start="clk_0.clk" end="SW.clk" />
+ <connection kind="clock" version="13.0" start="clk_0.clk" end="MEMOIRE.clk1" />
+ <connection kind="clock" version="13.0" start="clk_0.clk" end="CPU.clk" />
  <connection
    kind="reset"
    version="13.0"
@@ -810,7 +709,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="MOTOR_LEFT.clk" />
  <connection
    kind="reset"
@@ -834,7 +733,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="MOTOR_RIGHT.clk" />
  <connection
    kind="reset"
@@ -858,7 +757,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="start_sl_pio.clk" />
  <connection
    kind="reset"
@@ -882,7 +781,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="start_rot_pio.clk" />
  <connection
    kind="reset"
@@ -906,7 +805,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="dir_rot_pio.clk" />
  <connection
    kind="reset"
@@ -930,7 +829,7 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="fin_sl_pio.clk" />
  <connection
    kind="reset"
@@ -954,9 +853,10 @@
  <connection
    kind="clock"
    version="13.0"
-   start="clocks.sys_clk"
+   start="clk_0.clk"
    end="fin_rot_pio.clk" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>
+
 

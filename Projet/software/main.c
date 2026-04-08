@@ -1,15 +1,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define FIN_ROT     (*(volatile uint32_t *)0x04003000u) /* line lost flag */
+#define FIN_ROT     (*(volatile uint32_t *)0x04003000u) /* mirror data_ready */
 #define FIN_SL      (*(volatile uint32_t *)0x04003010u) /* data_ready */
-#define DIR_ROT     (*(volatile uint32_t *)0x04003020u) /* SW mux select */
-#define START_ROT   (*(volatile uint32_t *)0x04003030u) /* reserved */
+#define DIR_ROT     (*(volatile uint32_t *)0x04003020u) /* SW page LSB */
+#define START_ROT   (*(volatile uint32_t *)0x04003030u) /* SW page MSB */
 #define START_SL    (*(volatile uint32_t *)0x04003040u) /* acquisition trigger */
-#define MOTOR_RIGHT (*(volatile uint32_t *)0x04003050u) /* reserved */
-#define MOTOR_LEFT  (*(volatile uint32_t *)0x04003060u) /* threshold[7:0] */
+#define MOTOR_RIGHT (*(volatile uint32_t *)0x04003050u) /* unused */
+#define MOTOR_LEFT  (*(volatile uint32_t *)0x04003060u) /* op_sel = bits [9:8] */
 #define LEDS_ADR    (*(volatile uint32_t *)0x04003070u) /* LEDs */
-#define SW_ADR      (*(volatile uint32_t *)0x04003080u) /* vect/position readback */
+#define SW_ADR      (*(volatile uint32_t *)0x04003080u) /* page data */
 
 static void delay_cycles(volatile uint32_t count)
 {
@@ -17,36 +17,17 @@ static void delay_cycles(volatile uint32_t count)
     }
 }
 
-static int compute_position_from_vect(uint8_t vect)
+static void select_page(uint8_t page)
 {
-    int ppu = 0;
-    int pdu = 0;
-    bool found = false;
+    START_ROT = (uint32_t)((page >> 1) & 0x1u);
+    DIR_ROT = (uint32_t)(page & 0x1u);
+    delay_cycles(32u);
+}
 
-    for (int i = 0; i < 7; i++) {
-        if ((vect & (1u << i)) != 0u) {
-            ppu = i;
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        ppu = 0;
-    }
-
-    found = false;
-    for (int i = 6; i >= 0; i--) {
-        if ((vect & (1u << i)) != 0u) {
-            pdu = i;
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        pdu = 0;
-    }
-
-    return (ppu + pdu - 6);
+static uint8_t read_page(uint8_t page)
+{
+    select_page(page);
+    return (uint8_t)(SW_ADR & 0xFFu);
 }
 
 static bool trigger_and_wait_ready(void)
@@ -71,51 +52,61 @@ static bool trigger_and_wait_ready(void)
     return (timeout != 0u);
 }
 
+static uint16_t compute_expected(uint8_t data_ir, uint8_t data_jr, uint8_t op_sel)
+{
+    switch (op_sel & 0x3u) {
+    case 0u:
+        return (uint16_t)((uint16_t)data_ir + (uint16_t)data_jr);
+    case 1u:
+        return (uint16_t)((uint16_t)data_ir - (uint16_t)data_jr);
+    case 2u:
+        return (uint16_t)((uint16_t)data_ir << 1);
+    default:
+        return (uint16_t)((uint16_t)data_ir >> 1);
+    }
+}
+
 int main(void)
 {
-    const uint8_t seuil = 0x70u;
-
     START_SL = 0u;
     START_ROT = 0u;
     DIR_ROT = 0u;
     MOTOR_RIGHT = 0u;
-    MOTOR_LEFT = seuil;
 
     while (1) {
-        uint8_t vect = 0u;
-        uint8_t pos_code = 0u;
-        int pos_hw = 0;
-        int pos_sw = 0;
-        bool ready_ok = false;
-        bool line_lost = false;
-        bool coherent = false;
+        for (uint8_t op = 0u; op < 4u; op++) {
+            uint8_t result_lo = 0u;
+            uint8_t result_hi = 0u;
+            uint8_t data_ir = 0u;
+            uint8_t data_jr = 0u;
+            uint16_t result_hw = 0u;
+            uint16_t result_sw = 0u;
+            bool ok = false;
 
-        ready_ok = trigger_and_wait_ready();
-        if (!ready_ok) {
-            LEDS_ADR = 0x80u;
-            delay_cycles(200000u);
-            continue;
+            MOTOR_LEFT = ((uint32_t)(op & 0x3u) << 8);
+
+            ok = trigger_and_wait_ready();
+            if (!ok) {
+                LEDS_ADR = (uint32_t)(0x80u | (op << 4));
+                delay_cycles(200000u);
+                continue;
+            }
+
+            result_lo = read_page(0u); /* {start_rot,dir_rot}=00 */
+            result_hi = read_page(1u); /* {start_rot,dir_rot}=01 */
+            data_ir = read_page(2u);   /* {start_rot,dir_rot}=10 */
+            data_jr = read_page(3u);   /* {start_rot,dir_rot}=11 */
+
+            result_hw = (uint16_t)(((uint16_t)result_hi << 8) | (uint16_t)result_lo);
+            result_sw = compute_expected(data_ir, data_jr, op);
+
+            if ((result_hw == result_sw) && ((FIN_ROT & 0x1u) == 0u)) {
+                LEDS_ADR = (uint32_t)(result_lo);
+            } else {
+                LEDS_ADR = (uint32_t)(0x80u | (op << 4) | (result_lo & 0x0Fu));
+            }
+
+            delay_cycles(250000u);
         }
-
-        DIR_ROT = 0u;
-        vect = (uint8_t)(SW_ADR & 0x7Fu);
-
-        DIR_ROT = 1u;
-        pos_code = (uint8_t)(SW_ADR & 0x0Fu);
-        DIR_ROT = 0u;
-
-        pos_hw = (int)pos_code - 6;
-        pos_sw = compute_position_from_vect(vect);
-        line_lost = ((FIN_ROT & 0x1u) != 0u);
-
-        coherent = (pos_hw == pos_sw) && (line_lost == (vect == 0u));
-
-        if (coherent) {
-            LEDS_ADR = (uint32_t)(vect & 0x7Fu);
-        } else {
-            LEDS_ADR = (uint32_t)(0x80u | (vect & 0x7Fu));
-        }
-
-        delay_cycles(250000u);
     }
 }
