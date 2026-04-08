@@ -37,14 +37,15 @@ architecture RTL of capteurs_sol is
 
 
 
-	
+-- WARNING(5) in line 43: Please write a signal width part in the following sentence, manually.
 	constant CLOCK_DUR	: integer := 25;	-- 25ns = 40MHz
+
+-- WARNING(5) in line 44: Please write a signal width part in the following sentence, manually.
 	constant CONVST_WAIT_CLOCK_NUM	: integer := ((1600 + CLOCK_DUR - 1) / CLOCK_DUR);	--  1.6 us = 1600 ns, 1600/25=64
 
 	--`define DATA_BIT_LENGTH	12
 	--`define CHANNEL_NUM		8
 
-	-- Declarations (compter 8 canaux analogiques)
 	signal data_ready	: std_logic;
 	signal data0	: std_logic_vector(11 downto 0);
 	signal data1	: std_logic_vector(11 downto 0);
@@ -118,21 +119,17 @@ begin
 				  spi_clk_enable	<= '0';
 		elsif ( clk'event and (clk = '1')) then
 		        case(state) is
-					  -- Etat S0 : attente du signal de capture
 		              when S0 => 
 		                        channel	<= (others => '0');
 										data_ready	<= '0';
 		                        if (data_capture = '1') then
-				                            state	<= S1;  
-													 -- Engager la capture par l'ADC                         
+				                            state	<= S1;                          
 													 ADC_CONVST	<= '1';
 				                  end if;
-					  -- Etat S1 : attendre le temps de conversion de l'ADC
 		              when S1 =>
 		                        wait_tick_cnt	<= to_unsigned(0,8);
 										ADC_CONVST	<= '1';
 		                        state <= S2;
-					  -- Etat S2 : relache les signaux et attend 
 		              when S2 =>
 										spi_clk_enable	<= '0';
 										ADC_CONVST	<= '0';
@@ -142,7 +139,6 @@ begin
 		                        if (wait_tick_cnt >= to_unsigned(CONVST_WAIT_CLOCK_NUM,8)) then
 					                           state	<= S3; 
 				                    end if;  
-					-- Etat S3 : Transfert SPI actif, envoie les bits de config lit la conversion courante
 		              when S3 =>
 										spi_clk_enable	<= '1';
 		                        if (unsigned(data_bit_index) < 6) then 
@@ -157,14 +153,12 @@ begin
 		                        if (unsigned(data_bit_index) >= 11) then --(last_data_bits = '1') then
 					                           state	<= S4;
 				                   end if;
-				      -- Etat S4 : Transfert SPI inactif, passe au canal suivant ou transfere les donnees
 		              when S4 =>
 										spi_clk_enable	<= '0';
 		                        channel	<= std_logic_vector (unsigned(channel) + 1);
 		                        if (channel = "1000") then -- (last_channel = '1') then
 																			state	<= S5;
 																			data_ready	<= '1';
-																			-- Seuls les canaux 0 à 6 sont transmis en sortie (data7 ignorée)
 																			data0r	<= data0(11 downto 4);
 																			data1r	<= data1(11 downto 4);
 																			data2r	<= data2(11 downto 4);
@@ -177,7 +171,6 @@ begin
 					                           state	<= S1;
 														ADC_CONVST	<= '1';
 				                    end if;
-							-- Etat S5 : Attend data_capture='0' avant retour en S0 
 							when S5 => if (data_capture = '0') then
 				                            state	<= S0;
 				                    end if;

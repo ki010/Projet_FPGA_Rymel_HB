@@ -1,0 +1,53 @@
+# Quartus / Platform Designer generated build folders
+output_files/
+db/
+incremental_db/
+greybox_tmp/
+.qsys_edit/
+
+# Quartus reports and session files
+*.qws
+*.rpt
+*.summary
+*.done
+*.smsg
+*.pin
+*.jdi
+*.sld
+*.sta.rpt
+*.flow.rpt
+*.map.rpt
+*.fit.rpt
+*.asm.rpt
+*.qmsg
+
+# Programming outputs
+*.sof
+*.pof
+*.jic
+*.rbf
+*.jam
+*.jbc
+
+# Platform Designer generated outputs (keep .qsys source only)
+*_generation*.rpt
+*.sopcinfo
+*.cmp
+*.bsf
+*.html
+nios_system/synthesis/
+nios_system/simulation/
+
+# Nios II software build artifacts
+software/.metadata/
+software/Debug/
+software/Release/
+software/**/*.elf
+software/**/*.map
+software/**/*.objdump
+software/**/*.hex
+software/**/*.bin
+
+# OS / editor
+.DS_Store
+Thumbs.db
